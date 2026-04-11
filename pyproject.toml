@@ -1,0 +1,6 @@
+[project]
+name = "price-tracking-app"
+version = "0.1.0"
+description = "no ai pet project"
+readme = "README.md"
+python = ">=3.13"

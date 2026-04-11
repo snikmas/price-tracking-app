@@ -1,0 +1,1 @@
+# domains folder for constants, enums and types. usually also separated in folders, but i wanna use without it (the porject is not .. so big. for now)
