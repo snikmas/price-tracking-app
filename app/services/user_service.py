@@ -1,4 +1,4 @@
-from ..models.user import User, UserNotifications
+from models.user import User, UserNotifications
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -15,7 +15,7 @@ async def get_all_users(session: AsyncSession) -> list[User]:
 async def create_user(session: AsyncSession, user_data: User) -> User:
     new_user = User(**user_data.model_dump())
 
-    session.add(new_user)
+    session.add(new_user) # how to do.. that check if it was succesfull or not
     await session.commit()
     await session.refresh(new_user)
     return new_user

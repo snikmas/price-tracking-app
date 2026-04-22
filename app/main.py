@@ -1,11 +1,11 @@
 from fastapi import FastAPI
-from .core import *
-from app.api.v1 import *
+from core import logging, config
+from api.v1 import user, collection, product
 
 logging.setup_logging()
 app = FastAPI(title=config.config.app_name)
 
 # register router
-app.include_router(user, pref='users')
-app.include_router(collection, prefix='/collections')
-app.include_router(product, prefix='/products')
+app.include_router(user.router, prefix='/users')
+app.include_router(collection.router, prefix='/collections')
+app.include_router(product.router, prefix='/products')

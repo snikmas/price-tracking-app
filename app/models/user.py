@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from ..domain.enums import Gender, Country, Currency
+from domain.enums import Gender, Country, Currency
 from datetime import datetime
 
 class User(BaseModel):
@@ -11,7 +11,7 @@ class User(BaseModel):
     country: Country | None
     email: str | None
     phone: str | None
-    currency: Currency = Currency.USB
+    currency: Currency = Currency.USD
 
     created_at: datetime = Field(default_factory=datetime.now)
 
