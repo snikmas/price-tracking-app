@@ -2,31 +2,33 @@ from sqlalchemy import ForeignKey, String, MetaData, Table, Column, DateTime, fu
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from ..domain.enums import Gender, Country, Currency, ProductCategory
 
-
 metadata_obj = MetaData() # this thing registers all tables things
-
-product = Table(
-    "product",
-    metadata_obj,
-    Column("id", String(50), primary_key=True),
-    Column("image", String(100)),
-    Column("title", String(50), unique=True, nullable=False),
-    Column("description", String(100)),
-    Column("source_url", String(100)), # or url? for tracking?
-    Column("product_category", ProductCategory, nullable=False), 
-    Column("tags", String(100)),
-    Column("current_price", int),
-    
-    
-    Column("created_at", DateTime, server_default=func.now())
-)
-
-# color? do we need it? or create different classes? can add later. inheritance tihng
 
 class Base(DeclarativeBase):
     pass
 
-class User(Base):
+class Product(Base):
     __tablename__ = 'products'
 
-    id: Mapped[bytes]
+    id: Mapped[str] = mapped_column(primary_key=True)
+    image: Mapped[str] = mapped_column(String(200))
+    title: Mapped[str] = mapped_column(String[50], nullable=False)    
+    description: Mapped[str] = mapped_column(String(100))
+    source_url: Mapped[str] = mapped_column(String(100))
+    product_category: Mapped[ProductCategory] = mapped_column(ProductCategory, nullable=False)
+    tags: Mapped[list[str]] = mapped_column(list[str]) # is it okay?
+    current_price: Mapped[int] = mapped_column(int)
+    
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+    def __repr__(self):
+        return f"""<Product: {id}
+        Title: {self.title}
+        Description: {self.description}
+        Category: {self.product_category}
+        Current price: {self.current_price}
+        Image: {self.image}
+        Source_url: {self.source_url}
+        Tags: {self.tags}
+        Created at: {self.created_at}"""
+    
