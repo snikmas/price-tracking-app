@@ -1,13 +1,31 @@
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from ..core.config import config 
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-# allows run in 1+ threads
-engine = create_async_engine(config.db_url, echo=True, connect_args={"check_same_thread": True})
-AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False, bind=engine, autoflush=False)
+from ..core.config import config
+from .schemas.product import Product
+from .schemas.user import Base, User, UserNotifications
+
+async_db_url = config.db_url.replace("sqlite:///", "sqlite+aiosqlite:///")
+
+engine = create_async_engine(
+    async_db_url,
+    echo=True,
+    connect_args={"check_same_thread": False},
+)
+
+# a session buidler, not a session itself
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False, # prevents data from being cleared after commit, musthave for async (by default it clears everything, yes)
+    autoflush=False, # flush - Sends your changes to the database temporarily (before commit); we falsed it -> more predictable behavior
+)
+
 
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
 
+
+async def init_db() -> None:
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)

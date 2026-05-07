@@ -1,6 +1,6 @@
-from models.user import User, UserNotifications
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from app.db.schemas.user import User, UserNotifications
 
 async def get_user(session: AsyncSession, user_id: str) -> User:
     task = select(User).where(User.id == user_id)
@@ -10,32 +10,39 @@ async def get_user(session: AsyncSession, user_id: str) -> User:
 async def get_all_users(session: AsyncSession) -> list[User]:
     task = select(User)
     result = await session.execute(task)
-    return result.scalars.all()
+    return result.scalars().all()
 
 async def create_user(session: AsyncSession, user_data: User) -> User:
-    new_user = User(**user_data.model_dump())
-
-    session.add(new_user) # how to do.. that check if it was succesfull or not
+    session.add(user_data)
     await session.commit()
-    await session.refresh(new_user)
-    return new_user
+    await session.refresh(user_data)
+    return user_data
 
 async def delete_user(session: AsyncSession, user_id: str) -> bool:
     db_user = await session.get(User, user_id)
-    if not db_user: return None
+    if not db_user:
+        return False
 
     await session.delete(db_user)
     await session.commit()
     return True
 
-async def update_user(session: AsyncSession, new_user: User, user_id: str):
-    # 1. fetch a thing
+async def update_user(session: AsyncSession, new_user_data: User, user_id: str) -> User | None:
     db_user = await session.get(User, user_id)
-    if not db_user: return None
+    if not db_user:
+        return None
 
-    for key, value in new_user.model_dump().items():
+    for key, value in new_user_data.__dict__.items():
+        if key.startswith("_") or key in {"id", "created_at", "notifications"}:
+            continue
         setattr(db_user, key, value)
 
     await session.commit()
     await session.refresh(db_user)
-    return db_user # its good to return an obj/ not just bool
+    return db_user
+
+
+async def get_user_notifications(session: AsyncSession, user_id: str) -> UserNotifications | None:
+    task = select(UserNotifications).where(UserNotifications.user_id == user_id)
+    result = await session.execute(task)
+    return result.scalars().first()

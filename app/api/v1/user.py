@@ -1,47 +1,68 @@
-# file for writing routes that related to user. connects only with service, no business logic. routes
-from fastapi import APIRouter, Path, HTTPException
-from models.user import User, UserNotifications
-from services import user_service
-
 from typing import Annotated
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.schemas.user import User, UserNotifications
+from app.db.session import get_db
+from app.services import user_service
 
 router = APIRouter()
 
-# admin route
 @router.get('/')
-def get_all_users() -> list[User]:
-    result = user_service.get_all_users()
-    if result == None: # do we actually have to send error?
-        raise HTTPException(status_code=404, detail="No result")
-    return {"users": result}
-
-    pass
+async def get_all_users(
+    session: AsyncSession = Depends(get_db),
+) -> dict[str, list[dict]]:
+    result = await user_service.get_all_users(session)
+    return {"users": jsonable_encoder(result)}
 
 @router.get("/{id}")
-def get_user(*, id: Annotated[bytes, Path(title="the user's id")]) -> User:
-    result = user_service.get_user(id)
-    if result == None: 
+async def get_user(
+    *,
+    id: Annotated[str, Path(title="the user's id")],
+    session: AsyncSession = Depends(get_db),
+) -> dict[str, dict]:
+    result = await user_service.get_user(session, id)
+    if result is None:
         raise HTTPException(status_code=404, detail="The user not found")
-    return {"user": result}
+    return {"user": jsonable_encoder(result)}
 
 @router.get("/{id}/settings_notifications")
-def get_settings_notifications(*, id: bytes):
-    pass
+async def get_settings_notifications(
+    *,
+    id: Annotated[str, Path(title="the user's id")],
+    session: AsyncSession = Depends(get_db),
+) -> dict[str, dict]:
+    result = await user_service.get_user_notifications(session, id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="The user settings not found")
+    return {"settings_notifications": jsonable_encoder(result)}
 
 @router.post("/create")
-def create_user(*, user: Annotated[User, Path(title="the user data")]) -> dict:
-    result = user_service.create_user(user_data=user)
-    if result:
-        return {"result": "success"}
+async def create_user(
+    *,
+    user_data: Annotated[dict, Body(title="the user data")],
+    session: AsyncSession = Depends(get_db),
+) -> dict[str, dict]:
+    user = User(**user_data)
+    result = await user_service.create_user(session, user)
+    return {"user": jsonable_encoder(result)}
 
 @router.delete("/{user_id}/delete")
-def delete_user(*, user_id: Annotated[str, Path(title="the user's id")]) -> dict:
-    result = user_service.delete_user(user_id=user_id)
-    if result:
-        return {"result": "success"}
+async def delete_user(
+    *,
+    user_id: Annotated[str, Path(title="the user's id")],
+    session: AsyncSession = Depends(get_db),
+) -> dict[str, str]:
+    result = await user_service.delete_user(session, user_id=user_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="The user not found")
+    return {"result": "success"}
 
-# later can add orders with friends; queries; annotated metadata etc
 @router.get("/{id}/friends")
-def get_user_friends(*, id: bytes) -> list[User]:
-    pass
-
+async def get_user_friends(
+    *,
+    id: Annotated[str, Path(title="the user's id")],
+) -> dict[str, str]:
+    return {"result": f"Friends for user {id} are not implemented yet"}
