@@ -2,18 +2,19 @@ from datetime import datetime
 
 from sqlalchemy import DateTime, Enum as SqlEnum, ForeignKey, String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from ...domain.enums import Country, Currency, Gender
+import uuid
 
 # base is a table
-class Base(DeclarativeBase):
+class Base(DeclarativeBase, AsyncAttrs):
     pass
 
 
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    id: Mapped[str] = mapped_column(default=str(uuid.uuid4()), primary_key=True)
     nickname: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     full_name: Mapped[str] = mapped_column(String(50), nullable=False)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -32,7 +33,7 @@ class User(Base):
 
     def __repr__(self) -> str:
         return f"<User id={self.id!r} nickname={self.nickname!r}>"
-
+    
 
 class UserNotifications(Base):
     __tablename__ = "user_notifications"

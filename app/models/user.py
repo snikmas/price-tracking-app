@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
-from domain.enums import Gender, Country, Currency
+from app.domain.enums import Gender, Country, Currency
 from datetime import datetime
+import uuid
 
 class User(BaseModel):
     id: str
@@ -14,6 +15,19 @@ class User(BaseModel):
     currency: Currency = Currency.USD
 
     created_at: datetime = Field(default_factory=datetime.now)
+
+
+class UserCreate(BaseModel):
+    nickname: str
+    full_name: str | None = None
+    password: str
+    gender: Gender | None = None
+    country: Country
+    email: str
+    phone: str | None
+    currency: Currency = Currency.USD
+
+
 
 class UserNotifications(BaseModel):
     user_id: str

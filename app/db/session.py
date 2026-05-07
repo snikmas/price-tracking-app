@@ -21,7 +21,7 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-async def get_db():
+async def get_db(): # with this context manager, it automatically: 1) creates a new sessino when you need it 2) closes when you're done 3) handles error/rollbacks safely
     async with AsyncSessionLocal() as session:
         yield session
 

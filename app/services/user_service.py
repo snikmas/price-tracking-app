@@ -1,22 +1,30 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.schemas.user import User, UserNotifications
+from sqlalchemy.exc import IntegrityError
+import app.exceptions.user as user_exceptions
 
 async def get_user(session: AsyncSession, user_id: str) -> User:
     task = select(User).where(User.id == user_id)
     result = await session.execute(task)
+
     return result.scalars().first()
 
 async def get_all_users(session: AsyncSession) -> list[User]:
-    task = select(User)
+    task = select(User) # select its table
     result = await session.execute(task)
     return result.scalars().all()
 
 async def create_user(session: AsyncSession, user_data: User) -> User:
-    session.add(user_data)
-    await session.commit()
-    await session.refresh(user_data)
-    return user_data
+    try:
+        session.add(user_data)
+        await session.commit()
+        await session.refresh(user_data)
+        return user_data
+    except IntegrityError:
+        await session.rollback()
+        raise user_exceptions.UserAlreadyExist(nickname=user_data.nickname)
+        
 
 async def delete_user(session: AsyncSession, user_id: str) -> bool:
     db_user = await session.get(User, user_id)
