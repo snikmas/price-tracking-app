@@ -15,9 +15,12 @@ import app.exceptions.user as user_exceptions
 
 router = APIRouter()
 
+SessionDbDep = Annotated[AsyncSession, Depends(get_db)]
+
+# later can add update
 @router.get('/')
 async def get_all_users(
-    session: AsyncSession = Depends(get_db),
+    session: SessionDbDep,
 ) -> dict[str, list[dict]]:
     result = await user_service.get_all_users(session)
     return {"users": jsonable_encoder(result)}
@@ -26,7 +29,7 @@ async def get_all_users(
 async def get_user(
     *,
     id: Annotated[str, Path(title="the user's id")],
-    session: AsyncSession = Depends(get_db),
+    session: SessionDbDep,
 ) -> dict[str, dict]:
     result = await user_service.get_user(session, id)
     if result is None:
@@ -37,7 +40,7 @@ async def get_user(
 async def get_settings_notifications(
     *,
     id: Annotated[str, Path(title="the user's id")],
-    session: AsyncSession = Depends(get_db),
+    session: SessionDbDep,
 ) -> dict[str, dict]:
     result = await user_service.get_user_notifications(session, id)
     if result is None:
@@ -48,7 +51,7 @@ async def get_settings_notifications(
 async def create_user(
     *,
     user_data: Annotated[UserCreate, Body(title="the user data")],
-    session: AsyncSession = Depends(get_db),
+    session: SessionDbDep,
 ) -> dict[str, dict]:
     
     existing_user = await user_service.get_user(session=session, user_nickname=user_data.nickname)
@@ -66,7 +69,7 @@ async def create_user(
 async def delete_user(
     *,
     user_id: Annotated[str, Path(title="the user's id")],
-    session: AsyncSession = Depends(get_db),
+    session: SessionDbDep,
 ) -> dict[str, str]:
     result = await user_service.delete_user(session, user_id=user_id)
     if not result:
@@ -77,5 +80,6 @@ async def delete_user(
 async def get_user_friends(
     *,
     id: Annotated[str, Path(title="the user's id")],
+    session: SessionDbDep
 ) -> dict[str, str]:
     return {"result": f"Friends for user {id} are not implemented yet"}

@@ -1,9 +1,9 @@
-from models.product import Product
+from app.models.product import Product
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 # crud for product
-async def get_product(session: AsyncSession, product_id: str):
+async def get_product(session: AsyncSession, product_id: str | None = None, source_url: str | None = None):
     
     task = select(Product).where(Product.id == product_id)
     
