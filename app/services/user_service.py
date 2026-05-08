@@ -4,8 +4,15 @@ from app.db.schemas.user import User, UserNotifications
 from sqlalchemy.exc import IntegrityError
 import app.exceptions.user as user_exceptions
 
-async def get_user(session: AsyncSession, user_id: str) -> User:
-    task = select(User).where(User.id == user_id)
+async def get_user(session: AsyncSession, user_id: str | None = None, user_nickname: str | None = None) -> User:
+
+    if user_id:
+        task = select(User).where(User.id == user_id)
+    elif user_nickname:
+        task = select(User).where(User.nickname == user_nickname)
+    else:
+        return None
+        
     result = await session.execute(task)
 
     return result.scalars().first()
@@ -16,14 +23,10 @@ async def get_all_users(session: AsyncSession) -> list[User]:
     return result.scalars().all()
 
 async def create_user(session: AsyncSession, user_data: User) -> User:
-    try:
-        session.add(user_data)
-        await session.commit()
-        await session.refresh(user_data)
-        return user_data
-    except IntegrityError:
-        await session.rollback()
-        raise user_exceptions.UserAlreadyExist(nickname=user_data.nickname)
+    session.add(user_data)
+    await session.commit()
+    await session.refresh(user_data)
+    return user_data
         
 
 async def delete_user(session: AsyncSession, user_id: str) -> bool:

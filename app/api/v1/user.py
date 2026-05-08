@@ -50,21 +50,17 @@ async def create_user(
     user_data: Annotated[UserCreate, Body(title="the user data")],
     session: AsyncSession = Depends(get_db),
 ) -> dict[str, dict]:
-    # check if its exist
-    user = User(**user_data.model_dump())
-    existing_user = await user_service.get_user(session=session, user_id=user.id)
+    
+    existing_user = await user_service.get_user(session=session, user_nickname=user_data.nickname)
     if existing_user is not None:
         raise HTTPException(
             status_code=409,
             detail='Nickname already exists'
         )
     
-    logging.info(f"\n\n\n\nT HE USER IS EXISTS: {existing_user} its a none")
-    try:
-        result = await user_service.create_user(session, user)
-        return {"user": jsonable_encoder(result)}
-    except user_exceptions.UserAlreadyExist:
-        raise HTTPException(409, "User already exists!")
+    user = User(**user_data.model_dump()) # it would create an object..
+    result = await user_service.create_user(session, user)
+    return {"user": jsonable_encoder(result)}
 
 @router.delete("/{user_id}/delete")
 async def delete_user(

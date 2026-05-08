@@ -4,7 +4,7 @@ from sqlalchemy import DateTime, Enum as SqlEnum, ForeignKey, String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from ...domain.enums import Country, Currency, Gender
-import uuid
+from uuid import uuid4
 
 # base is a table
 class Base(DeclarativeBase, AsyncAttrs):
@@ -14,7 +14,7 @@ class Base(DeclarativeBase, AsyncAttrs):
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[str] = mapped_column(default=str(uuid.uuid4()), primary_key=True)
+    id: Mapped[str] = mapped_column(default=lambda: str(uuid4()), primary_key=True)
     nickname: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     full_name: Mapped[str] = mapped_column(String(50), nullable=False)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
